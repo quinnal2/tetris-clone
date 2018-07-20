@@ -1,6 +1,9 @@
 import java.awt.Graphics;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.util.ArrayList;
 
 import javax.swing.JLabel;
@@ -16,18 +19,22 @@ public class Board extends JPanel implements ActionListener
 	Tetromino currentTetromino;
 	int currentTetrominoIdx;
 	Timer timer;
+	boolean occupied[][];
 	
 	public Board(Tetris frame)
 	{
+		occupied= new boolean[22][10];
 		setFocusable(true);
 		score = frame.getScore();
 		tetrominos = new ArrayList<Tetromino>(0);
 		currentTetrominoIdx = -1;
 		timer = new Timer(500, this);
+		addKeyListener(new TetrisKeyListener());
 	}
 
 	public void actionPerformed(ActionEvent event){
 		drop();
+		updateBoard();
 		repaint();
 	}
 	
@@ -48,17 +55,17 @@ public class Board extends JPanel implements ActionListener
 			for(int j = 0;j < currentSquares.length;j++)
 			{
 				g.setColor(tetrominos.get(i).color);
-				g.draw3DRect(currentSquares[j].getX() * 20, currentSquares[j].getY() * 20, currentSquares[j].getWidth(), currentSquares[j].getHeight(), true);
+				g.fill3DRect(currentSquares[j].getX() * 20, currentSquares[j].getY() * 20, currentSquares[j].getWidth(), currentSquares[j].getHeight(), true);
 			}
 		}
 	}
 	
 	public void drop()
 	{
-		if(currentTetromino.getY() + 1 <= 21)
+		if(getMaxY() + 1 <= 21)
 		{
 			currentTetromino.setY(currentTetromino.getY() + 1);
-			if(currentTetromino.getY() == 21)
+			if(getMaxY() == 21)
 				newTetromino();
 		}
 	}
@@ -68,5 +75,60 @@ public class Board extends JPanel implements ActionListener
 		tetrominos.add(new Tetromino());
 		currentTetrominoIdx++;
 		currentTetromino = tetrominos.get(currentTetrominoIdx);
+		updateBoard();
+	}
+	
+	public void updateBoard()
+	{
+		clearBoard();
+		for(int i = 0;i < tetrominos.size();i++)
+		{
+			Square currentSquares[] = tetrominos.get(i).getSquares();
+			
+			for(int j = 0;j < currentSquares.length;j++)
+			{
+				occupied[currentSquares[j].getY()][currentSquares[j].getX()] = true;
+			}
+		}
+	}
+	
+	public void clearBoard()
+	{
+		for(int i = 0;i < occupied.length;i++)
+		{
+			for(int j = 0;j < occupied[i].length;j++)
+			{
+				occupied[i][j] = false;
+			}
+		}
+	}
+	
+	public int getMaxY()
+	{
+		Square[] currentSquares = currentTetromino.getSquares();
+		int max = 0;
+		
+		for(int i = 0;i < currentSquares.length;i++)
+		{
+			if(currentSquares[i].getY() > max)
+				max = currentSquares[i].getY();
+		}
+		return max;
+	}
+	
+	class TetrisKeyListener extends KeyAdapter
+	{
+		public void keyPressed(KeyEvent e)
+		{
+			if(e.getKeyCode() == KeyEvent.VK_A)
+			{
+				currentTetromino.setX(currentTetromino.getX() - 1);
+			}
+			if(e.getKeyCode() == KeyEvent.VK_D)
+			{
+				currentTetromino.setX(currentTetromino.getX() + 1);
+			}
+			repaint();
+		}
 	}
 }
