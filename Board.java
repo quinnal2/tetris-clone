@@ -62,12 +62,12 @@ public class Board extends JPanel implements ActionListener
 	
 	public void drop()
 	{
-		if(getMaxY() + 1 <= 21)
-		{
+		//if(getMaxY() + 1 <= 21)
+		//{
 			currentTetromino.setY(currentTetromino.getY() + 1);
-			if(getMaxY() == 21)
+			if(getMaxY() == 21 || detectCollisions(1, 1))
 				newTetromino();
-		}
+		//}
 	}
 	
 	public void newTetromino()
@@ -116,18 +116,64 @@ public class Board extends JPanel implements ActionListener
 		return max;
 	}
 	
+	public boolean detectCollisions(int vector, int axis)
+	{
+		Square[] currentSquares = currentTetromino.getSquares();
+		
+		if(axis == 0) // x
+		{
+			for(int i = 0;i < currentSquares.length;i++)
+			{
+				if(occupied[currentSquares[i].getY()][currentSquares[i].getX() + vector] == true)
+				{
+					boolean shared = false;
+					
+					for(int j = 0;j < currentSquares.length;j++)
+					{
+						if(currentSquares[j].getY() == currentSquares[i].getY() && currentSquares[j].getX() == currentSquares[i].getX() + vector)
+							shared = true;
+					}
+					if(!shared)
+						return true;
+				}
+			}
+		}
+		else // y
+		{
+			for(int i = 0;i < currentSquares.length;i++)
+			{
+				if(occupied[currentSquares[i].getY() + vector][currentSquares[i].getX()] == true)
+				{
+					boolean shared = false;
+					
+					for(int j = 0;j < currentSquares.length;j++)
+					{
+						if(currentSquares[j].getY() == currentSquares[i].getY() + vector && currentSquares[j].getX() == currentSquares[i].getX())
+							shared = true;
+					}
+					if(!shared)
+						return true;
+				}
+			}
+		}
+		return false;
+	}
+	
 	class TetrisKeyListener extends KeyAdapter
 	{
 		public void keyPressed(KeyEvent e)
 		{
 			if(e.getKeyCode() == KeyEvent.VK_A)
 			{
-				currentTetromino.setX(currentTetromino.getX() - 1);
+				if(!detectCollisions(-1, 0))
+					currentTetromino.setX(currentTetromino.getX() - 1);
 			}
 			if(e.getKeyCode() == KeyEvent.VK_D)
 			{
-				currentTetromino.setX(currentTetromino.getX() + 1);
+				if(!detectCollisions(1, 0))
+					currentTetromino.setX(currentTetromino.getX() + 1);
 			}
+			updateBoard();
 			repaint();
 		}
 	}
